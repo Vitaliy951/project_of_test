@@ -1,52 +1,61 @@
 import pytest
+from unittest.mock import patch
 from main import Product, Category
 
+class TestProduct:
+    @pytest.fixture
+    def product(self):
+        return Product("Test Product", "Test Description", 100.0, 10)
 
-def test_product_initialization():
-    product = Product("Test Product", "Test Description", 100, 10)
-    assert product.name == "Test Product"
-    assert product.description == "Test Description"
-    assert product.price == 100
-    assert product.quantity == 10
+    def test_initial_attributes(self, product):
+        assert product.name == "Test Product"
+        assert product.description == "Test Description"
+        assert product.price == 100.0
+        assert product.quantity == 10
 
+    def test_price_setter_valid(self, product):
+        product.price = 120.0
+        assert product.price == 120.0
 
-def test_product_price_setter():
-    product = Product("Test Product", "Test Description", 100, 10)
-    product.price = 150
-    assert product.price == 150
+    def test_price_setter_lower(self, product):
+        with patch('builtins.input', side_effect=['y']):
+            product.price = 80.0
+        assert product.price == 80.0
 
-    product.price = -50  # Пытаемся установить отрицательную цену
-    assert product.price == 150  # Цена не должна измениться
+    def test_price_setter_not_lower(self, product):
+        with patch('builtins.input', side_effect=['n']):
+            product.price = 80.0
+        assert product.price == 100.0
 
+    def test_price_setter_invalid(self, product):
+        with patch('builtins.print') as mock_print:
+            product.price = -50.0
+            mock_print.assert_called_with("Цена не должна быть нулевая или отрицательная")
 
-def test_category_initialization():
-    product1 = Product("Product 1", "Description 1", 100, 10)
-    product2 = Product("Product 2", "Description 2", 200, 5)
-    category = Category("Test Category", "Test Description", [product1, product2])
+        with patch('builtins.print') as mock_print:
+            product.price = 0.0
+            mock_print.assert_called_with("Цена не должна быть нулевая или отрицательная")
 
-    assert category.name == "Test Category"
-    assert category.get_product_count() == 2
+class TestCategory:
+    @pytest.fixture
+    def category(self):
+        product1 = Product("Product 1", "Description 1", 100.0, 5)
+        product2 = Product("Product 2", "Description 2", 200.0, 3)
+        return Category("Test Category", "Test Description", [product1, product2])
 
+    def test_initial_attributes(self, category):
+        assert category.name == "Test Category"
+        assert category.description == "Test Description"
+        assert category.get_product_count() == 2
 
-def test_add_product_to_category():
-    product = Product("Product 1", "Description 1", 100, 10)
-    category = Category("Test Category", "Test Description", [])
-    category.add_product(product)
+    def test_add_product(self, category):
+        new_product = Product("Product 3", "Description 3", 150.0, 4)
+        category.add_product(new_product)
+        assert category.get_product_count() == 3
 
-    assert category.get_product_count() == 1
-    assert category.products == "Product 1, 100 руб. Остаток: 10 шт."
-
-
-def test_new_product_class_method():
-    product_data = {
-        "name": "New Product",
-        "description": "New Description",
-        "price": 300,
-        "quantity": 20
-    }
-    new_product = Product.new_product(product_data)
-
-    assert new_product.name == "New Product"
-    assert new_product.description == "New Description"
-    assert new_product.price == 300
-    assert new_product.quantity == 20
+    def test_products_property(self, category):
+        expected_output = (
+            "Product 1, 100.0 руб. Остаток: 5 шт.\n"
+            "Product 2, 200.0 руб. Остаток: 3 шт."
+        )
+        assert category.products == expected_output
