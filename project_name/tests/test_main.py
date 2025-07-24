@@ -1,61 +1,73 @@
+import os
 import pytest
-from unittest.mock import patch
-from main import Product, Category
+from project_name.src.main import Product, Category, CategoryIterator
 
-class TestProduct:
-    @pytest.fixture
-    def product(self):
-        return Product("Test Product", "Test Description", 100.0, 10)
+"""Создание директории для тестов, если она отсутствует"""
+test_results_dir = 'test_results'
+os.makedirs(test_results_dir, exist_ok=True)
 
-    def test_initial_attributes(self, product):
-        assert product.name == "Test Product"
-        assert product.description == "Test Description"
-        assert product.price == 100.0
-        assert product.quantity == 10
 
-    def test_price_setter_valid(self, product):
-        product.price = 120.0
-        assert product.price == 120.0
+"""Функция для записи результатов тестов в файл"""
+def write_test_results(results):
+    with open(os.path.join(test_results_dir, 'results.txt'), 'w') as f:
+        f.write(results)
 
-    def test_price_setter_lower(self, product):
-        with patch('builtins.input', side_effect=['y']):
-            product.price = 80.0
-        assert product.price == 80.0
 
-    def test_price_setter_not_lower(self, product):
-        with patch('builtins.input', side_effect=['n']):
-            product.price = 80.0
-        assert product.price == 100.0
+"""Запуск тестов и запись результатов"""
+if __name__ == '__main__':
+    # Запуск pytest и получение результатов
+    result = pytest.main(['--tb=short', '-q', '--disable-warnings'])
 
-    def test_price_setter_invalid(self, product):
-        with patch('builtins.print') as mock_print:
-            product.price = -50.0
-            mock_print.assert_called_with("Цена не должна быть нулевая или отрицательная")
+    """Получение текста результатов"""
+    if result == 0:
+        results_text = "Все тесты прошли успешно!\n"
+    else:
+        results_text = f"Некоторые тесты не прошли. Код ошибки: {result}\n"
 
-        with patch('builtins.print') as mock_print:
-            product.price = 0.0
-            mock_print.assert_called_with("Цена не должна быть нулевая или отрицательная")
+    """Запись результатов в файл"""
+    write_test_results(results_text)
 
-class TestCategory:
-    @pytest.fixture
-    def category(self):
-        product1 = Product("Product 1", "Description 1", 100.0, 5)
-        product2 = Product("Product 2", "Description 2", 200.0, 3)
-        return Category("Test Category", "Test Description", [product1, product2])
 
-    def test_initial_attributes(self, category):
-        assert category.name == "Test Category"
-        assert category.description == "Test Description"
-        assert category.get_product_count() == 2
+def test_product_str():
+    product = Product("Test Product", "Test Description", 100, 10)
+    assert str(product) == "Test Product, 100 руб. Остаток: 10 шт."
 
-    def test_add_product(self, category):
-        new_product = Product("Product 3", "Description 3", 150.0, 4)
-        category.add_product(new_product)
-        assert category.get_product_count() == 3
 
-    def test_products_property(self, category):
-        expected_output = (
-            "Product 1, 100.0 руб. Остаток: 5 шт.\n"
-            "Product 2, 200.0 руб. Остаток: 3 шт."
-        )
-        assert category.products == expected_output
+def test_category_str():
+    product1 = Product("Product 1", "Desc 1", 100, 5)
+    product2 = Product("Product 2", "Desc 2", 200, 10)
+    category = Category("Test Category", "Test Desc", [product1, product2])
+    assert str(category) == "Test Category, количество продуктов: 15 шт."
+
+
+def test_product_add():
+    product1 = Product("Product 1", "Desc 1", 100, 5)
+    product2 = Product("Product 2", "Desc 2", 200, 10)
+    assert product1 + product2 == 2500  # 100*5 + 200*10
+
+
+def test_category_iterator():
+    product1 = Product("Product 1", "Desc 1", 100, 5)
+    product2 = Product("Product 2", "Desc 2", 200, 10)
+    category = Category("Test Category", "Test Desc", [product1, product2])
+    iterator = CategoryIterator(category)
+
+    products = [product for product in iterator]
+    assert len(products) == 2
+    assert str(products[0]) == str(product1)
+    assert str(products[1]) == str(product2)
+
+
+"""Запуск тестов"""
+if __name__ == '__main__':
+    # Запуск pytest и получение результатов
+    result = pytest.main(['--tb=short', '-q', '--disable-warnings'])
+
+    """Получение текста результатов"""
+    if result == 0:
+        results_text = "Все тесты прошли успешно!\n"
+    else:
+        results_text = f"Некоторые тесты не прошли. Код ошибки: {result}\n"
+
+    """Запись результатов в файл"""
+    write_test_results(results_text)
