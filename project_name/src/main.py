@@ -1,4 +1,16 @@
-class Product:
+from abc import ABC, abstractmethod
+
+
+class BaseProduct(ABC):
+    """Абстрактный базовый класс для всех продуктов."""
+
+    @abstractmethod
+    def get_info(self):
+        """Метод для получения информации о продукте."""
+        pass
+
+
+class Product(BaseProduct):
     """Базовый класс для всех продуктов."""
 
     product_count = 0
@@ -15,8 +27,22 @@ class Product:
             raise TypeError("Невозможно сложить продукты разных типов")
         return self.price + other.price
 
+    def get_info(self):
+        return f"{self.name}: {self.description}, Цена: {self.price}, Количество: {self.quantity}"
 
-class Smartphone(Product):
+    def __repr__(self):
+        return f"Product(name={self.name}, price={self.price})"
+
+
+class LoggingMixin:
+    """Миксин для логирования создания объектов."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        print(f"Создан объект {self.__class__.__name__} с параметрами: {args}, {kwargs}")
+
+
+class Smartphone(LoggingMixin, Product):
     """Класс для смартфонов, наследующий от Product."""
 
     def __init__(self, name, description, price, quantity, efficiency, model, memory, color):
@@ -26,8 +52,11 @@ class Smartphone(Product):
         self.memory = memory
         self.color = color
 
+    def get_info(self):
+        return super().get_info() + f", Эффективность: {self.efficiency}, Модель: {self.model}, Память: {self.memory}, Цвет: {self.color}"
 
-class LawnGrass(Product):
+
+class LawnGrass(LoggingMixin, Product):
     """Класс для газонной травы, наследующий от Product."""
 
     def __init__(self, name, description, price, quantity, country, germination_period, color):
@@ -35,6 +64,9 @@ class LawnGrass(Product):
         self.country = country
         self.germination_period = germination_period
         self.color = color
+
+    def get_info(self):
+        return super().get_info() + f", Страна: {self.country}, Срок прорастания: {self.germination_period}, Цвет: {self.color}"
 
 
 class Category:
@@ -60,10 +92,7 @@ if __name__ == '__main__':
 
     # Вывод информации о смартфонах
     for smartphone in [smartphone1, smartphone2, smartphone3]:
-        print(f"Смартфон: {smartphone.name}, Описание: {smartphone.description}, "
-              f"Цена: {smartphone.price}, Количество: {smartphone.quantity}, "
-              f"Эффективность: {smartphone.efficiency}, Модель: {smartphone.model}, "
-              f"Память: {smartphone.memory}, Цвет: {smartphone.color}")
+        print(smartphone.get_info())
 
     # Создание экземпляров газонной травы
     grass1 = LawnGrass("Газонная трава", "Элитная трава для газона", 500.0, 20, "Россия", "7 дней", "Зеленый")
@@ -71,10 +100,7 @@ if __name__ == '__main__':
 
     # Вывод информации о газонной траве
     for grass in [grass1, grass2]:
-        print(f"Трава: {grass.name}, Описание: {grass.description}, "
-              f"Цена: {grass.price}, Количество: {grass.quantity}, "
-              f"Страна: {grass.country}, Срок прорастания: {grass.germination_period}, "
-              f"Цвет: {grass.color}")
+        print(grass.get_info())
 
     # Сложение смартфонов
     smartphone_sum = smartphone1 + smartphone2
