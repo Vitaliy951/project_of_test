@@ -1,73 +1,56 @@
-import os
 import pytest
-from project_name.src.main import Product, Category, CategoryIterator
+from project_name.src.main import Product, Smartphone, LawnGrass, Category
 
-"""Создание директории для тестов, если она отсутствует"""
-test_results_dir = 'test_results'
-os.makedirs(test_results_dir, exist_ok=True)
+def test_product_initialization():
+    product = Product("Товар", "Описание товара", 100.0, 10)
+    assert product.name == "Товар"
+    assert product.description == "Описание товара"
+    assert product.price == 100.0
+    assert product.quantity == 10
 
+def test_smartphone_initialization():
+    smartphone = Smartphone("Samsung Galaxy S23 Ultra", "Описание", 180000.0, 5, 95.5, "S23 Ultra", 256, "Серый")
+    assert smartphone.name == "Samsung Galaxy S23 Ultra"
+    assert smartphone.efficiency == 95.5
+    assert smartphone.model == "S23 Ultra"
+    assert smartphone.memory == 256
+    assert smartphone.color == "Серый"
 
-"""Функция для записи результатов тестов в файл"""
-def write_test_results(results):
-    with open(os.path.join(test_results_dir, 'results.txt'), 'w') as f:
-        f.write(results)
+def test_lawn_grass_initialization():
+    grass = LawnGrass("Газонная трава", "Описание", 500.0, 20, "Россия", "7 дней", "Зеленый")
+    assert grass.name == "Газонная трава"
+    assert grass.country == "Россия"
+    assert grass.germination_period == "7 дней"
+    assert grass.color == "Зеленый"
 
+def test_product_count():
+    initial_count = Product.product_count
+    Product("Товар 1", "Описание 1", 100.0, 10)
+    Product("Товар 2", "Описание 2", 200.0, 5)
+    assert Product.product_count == initial_count + 2
 
-"""Запуск тестов и запись результатов"""
-if __name__ == '__main__':
-    # Запуск pytest и получение результатов
-    result = pytest.main(['--tb=short', '-q', '--disable-warnings'])
+def test_addition_same_type():
+    smartphone1 = Smartphone("Samsung", "Описание", 1000.0, 1, 90.0, "Model A", 128, "Черный")
+    smartphone2 = Smartphone("Iphone", "Описание", 1500.0, 1, 95.0, "Model B", 256, "Белый")
+    assert smartphone1 + smartphone2 == 2500.0
 
-    """Получение текста результатов"""
-    if result == 0:
-        results_text = "Все тесты прошли успешно!\n"
-    else:
-        results_text = f"Некоторые тесты не прошли. Код ошибки: {result}\n"
+def test_addition_different_type():
+    smartphone = Smartphone("Samsung", "Описание", 1000.0, 1, 90.0, "Model A", 128, "Черный")
+    grass = LawnGrass("Газонная трава", "Описание", 500.0, 10, "Россия", "7 дней", "Зеленый")
+    with pytest.raises(TypeError):
+        _ = smartphone + grass
 
-    """Запись результатов в файл"""
-    write_test_results(results_text)
+def test_add_product():
+    category = Category("Смартфоны", "Описание категории")
+    smartphone = Smartphone("Samsung", "Описание", 1000.0, 1, 90.0, "Model A", 128, "Черный")
+    category.add_product(smartphone)
+    assert len(category.products) == 1
+    assert category.products[0] == smartphone
 
+def test_add_invalid_product():
+    category = Category("Смартфоны", "Описание категории")
+    with pytest.raises(TypeError):
+        category.add_product("Не продукт")
 
-def test_product_str():
-    product = Product("Test Product", "Test Description", 100, 10)
-    assert str(product) == "Test Product, 100 руб. Остаток: 10 шт."
-
-
-def test_category_str():
-    product1 = Product("Product 1", "Desc 1", 100, 5)
-    product2 = Product("Product 2", "Desc 2", 200, 10)
-    category = Category("Test Category", "Test Desc", [product1, product2])
-    assert str(category) == "Test Category, количество продуктов: 15 шт."
-
-
-def test_product_add():
-    product1 = Product("Product 1", "Desc 1", 100, 5)
-    product2 = Product("Product 2", "Desc 2", 200, 10)
-    assert product1 + product2 == 2500  # 100*5 + 200*10
-
-
-def test_category_iterator():
-    product1 = Product("Product 1", "Desc 1", 100, 5)
-    product2 = Product("Product 2", "Desc 2", 200, 10)
-    category = Category("Test Category", "Test Desc", [product1, product2])
-    iterator = CategoryIterator(category)
-
-    products = [product for product in iterator]
-    assert len(products) == 2
-    assert str(products[0]) == str(product1)
-    assert str(products[1]) == str(product2)
-
-
-"""Запуск тестов"""
-if __name__ == '__main__':
-    # Запуск pytest и получение результатов
-    result = pytest.main(['--tb=short', '-q', '--disable-warnings'])
-
-    """Получение текста результатов"""
-    if result == 0:
-        results_text = "Все тесты прошли успешно!\n"
-    else:
-        results_text = f"Некоторые тесты не прошли. Код ошибки: {result}\n"
-
-    """Запись результатов в файл"""
-    write_test_results(results_text)
+if __name__ == "__main__":
+    pytest.main()
