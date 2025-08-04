@@ -130,7 +130,7 @@ celerybeat.pid
 
 # Environments
 .env
-project_name/.venv
+Product_sort/.venv
 env/
 venv/
 ENV/
