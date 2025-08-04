@@ -1,57 +1,62 @@
+import sys
+import os
 import pytest
-from Product_sort.main import Product, Smartphone, LawnGrass, Category
 
-def reset_product_count():
-    Product.product_count = 0
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
+from product import Product
+from category import Category
 
+@pytest.fixture(autouse=True)
+def reset_category_count():
+    """Сбрасывает счетчик категорий перед каждым тестом."""
+    Category.category_count = 0
+    yield
 
-def test_product_creation():
-    reset_product_count()  # Сброс счетчика перед тестом
-    product = Product("Товар", "Описание товара", 100.0, 10)
-    assert product.name == "Товар"
-    assert product.description == "Описание товара"
-    assert product.price == 100.0
-    assert product.quantity == 10
+@pytest.fixture
+def products():
+    """Создает тестовые продукты."""
+    product1 = Product("Samsung Galaxy S23 Ultra", "256GB, Серый цвет, 200MP камера", 180000.0, 5)
+    product2 = Product("Iphone 15", "512GB, Gray space", 210000.0, 8)
+    return product1, product2
 
+def test_product_initialization(products):
+    """Тестируем инициализацию продукта."""
+    product1, _ = products
+    assert product1.name == "Samsung Galaxy S23 Ultra"
+    assert product1.description == "256GB, Серый цвет, 200MP камера"
+    assert product1.price == 180000.0
+    assert product1.quantity == 5
 
-def test_smartphone_creation():
-    reset_product_count()  # Сброс счетчика перед тестом
-    smartphone = Smartphone("Samsung Galaxy", "Описание", 1000.0, 5, 95.5, "Galaxy", 128, "Синий")
-    assert smartphone.name == "Samsung Galaxy"
-    assert smartphone.efficiency == 95.5
+def test_product_repr(products):
+    """Тестируем строковое представление продукта."""
+    product1, _ = products
+    assert repr(product1) == "Product(name=Samsung Galaxy S23 Ultra, price=180000.0)"
 
+def test_product_price_update(products):
+    """Тест обновления цены продукта."""
+    product1, _ = products
+    product1.price = 190000.0
+    assert product1.price == 190000.0
 
-def test_lawn_grass_creation():
-    reset_product_count()  # Сброс счетчика перед тестом
-    grass = LawnGrass("Газонная трава", "Описание", 500.0, 20, "Россия", "7 дней", "Зеленый")
-    assert grass.country == "Россия"
+@pytest.fixture
+def category(products):
+    """Создает тестовую категорию с продуктами."""
+    return Category("Смартфоны", "Описание смартфонов", list(products))
 
-
-def test_category_creation():
-    reset_product_count()  # Сброс счетчика перед тестом
-    product1 = Product("Товар1", "Описание1", 100.0, 10)
-    product2 = Product("Товар2", "Описание2", 200.0, 5)
-    category = Category("Категория", "Описание категории", [product1, product2])
+def test_category_initialization(category):
+    """Тестируем инициализацию категории."""
+    assert category.name == "Смартфоны"
+    assert category.description == "Описание смартфонов"
     assert len(category.products) == 2
 
+def test_category_product_count(category):
+    """Тестируем подсчет продуктов в категории."""
+    assert category.product_count == 2
 
-def test_add_product_to_category():
-    reset_product_count()  # Сброс счетчика перед тестом
-    category = Category("Категория", "Описание категории")
-    product = Product("Товар", "Описание", 100.0, 10)
-    category.add_product(product)
-    assert len(category.products) == 1
+def test_category_count(category):
+    """Тестируем общий счетчик категорий."""
+    assert Category.category_count == 1
 
-
-def test_invalid_product_addition():
-    reset_product_count()  # Сброс счетчика перед тестом
-    category = Category("Категория", "Описание категории")
-    with pytest.raises(TypeError):
-        category.add_product("Не продукт")
-
-
-def test_product_addition_and_count():
-    reset_product_count()  # Сброс счетчика перед тестом
-    product1 = Product("Товар1", "Описание1", 100.0, 10)
-    product2 = Product("Товар2", "Описание2", 200.0, 5)
-    assert Product.product_count == 2
+def test_category_repr(category):
+    """Тестируем строковое представление категории."""
+    assert repr(category) == "Category(name=Смартфоны, product_count=2)"
