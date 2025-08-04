@@ -1,5 +1,5 @@
 import pytest
-from Product_sort.src.main import Product, Smartphone, LawnGrass, Category
+from Product_sort.main import Product, Smartphone, LawnGrass, Category
 
 def reset_product_count():
     Product.product_count = 0
