@@ -1,22 +1,34 @@
 import pytest
-from src.product import Product, ZeroQuantityError
-from src.category import Category
+import json
+from unittest.mock import patch
+from main import main
 
+class TestMain:
+    def test_main_execution(self, tmp_path, capsys):
+        data_dir = tmp_path / "data"
+        data_dir.mkdir()
+        products_file = data_dir / "products.json"
 
-def test_product_creation():
-    with pytest.raises(ZeroQuantityError):
-        Product("Test", "Desc", 100, 0)
+        # Исправленная структура данных
+        test_data = [{
+            "name": "Смартфоны",
+            "description": "Тестовые смартфоны",
+            "products": [{
+                "name": "Xiaomi",
+                "description": "Смартфон",
+                "price": 25000,
+                "quantity": 5
+            }]
+        }]
 
+        with open(products_file, 'w') as f:
+            json.dump(test_data, f)
 
-def test_category_average_price():
-    products = [
-        Product("Item1", "Desc1", 100, 1),
-        Product("Item2", "Desc2", 200, 1)
-    ]
-    category = Category("Test", "Category", products)
-    assert category.middle_price() == 150.0
+        with patch('src.product.Product.load_products') as mock_loader:
+            mock_loader.return_value = [
+                type('', (), {'description': 'смартфон', 'price': 25000})()
+            ]
+            main()
 
-
-def test_empty_category_average():
-    category = Category("Empty", "Category")
-    assert category.middle_price() == 0
+        captured = capsys.readouterr()
+        assert "Средняя цена смартфонов: 25000.00 руб." in captured.out

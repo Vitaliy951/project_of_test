@@ -1,33 +1,26 @@
-from src.category import Category
-from src.product import Product, ZeroQuantityError
+import json
+import os
+
+from src.product import Product
 
 
 def main():
     try:
-        # Тест добавления товара с нулевым количеством
-        product_invalid = Product("Бракованный товар", "Неверное количество", 1000.0, 0)
-    except ZeroQuantityError as e:
-        print(f"Ошибка: {str(e)}")
-    else:
-        print("Товар успешно добавлен")
-    finally:
-        print("Обработка добавления товара завершена\n")
+        # Загрузка продуктов
+        products = Product.load_products(os.path.join('data', 'products.json'))
 
-    # Создание нормальных товаров
-    products = [
-        Product("Samsung Galaxy S23 Ultra", "256GB, Серый", 180000.0, 5),
-        Product("iPhone 15", "512GB, Space Gray", 210000.0, 8),
-        Product("Xiaomi Redmi Note 11", "1024GB, Синий", 31000.0, 14)
-    ]
+        # Фильтрация смартфонов
+        smartphones = [p for p in products if 'смартфон' in p.description.lower()]
 
-    # Создание категорий
-    smartphones = Category("Смартфоны", "Мобильные устройства", products)
-    empty_category = Category("Пустая", "Категория без товаров")
+        if smartphones:
+            avg_price = sum(p.price for p in smartphones) / len(smartphones)
+            print(f"Средняя цена смартфонов: {avg_price:.2f} руб.")
+        else:
+            print("Смартфоны не найдены")
 
-    # Тестирование средней цены
-    print(f"Средняя цена смартфонов: {smartphones.middle_price()} руб.")
-    print(f"Средняя цена пустой категории: {empty_category.middle_price()} руб.")
+    except Exception as e:
+        print(f"Ошибка: {e}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
